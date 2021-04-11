@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "forgerocks",
+    "name": "ForgeRocks",
+    "description": "JNI bindings for rocksdb, as a Minecraft Forge mod.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://daporkchop.net",
+    "updateUrl": "",
+    "authorList": [
+      "the rocksdb developers"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
