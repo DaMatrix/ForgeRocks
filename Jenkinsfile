@@ -28,7 +28,9 @@ String getDiscordMessage() {
 }
 
 pipeline {
-    agent any
+    agent {
+        label "daporkchop_maven_password"
+    }
     tools {
         git "Default"
         jdk "jdk8"

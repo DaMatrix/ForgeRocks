@@ -39,7 +39,7 @@ ext {
 
     //dependency things
     junitVersion = "4.12"
-    rocksdbVersion = "6.13.3"
+    rocksdbVersion = "6.20.3"
 
     //general things
     javaVersion = "1.8"

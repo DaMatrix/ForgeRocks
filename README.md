@@ -33,6 +33,11 @@ dependencies {
 <tbody>
 <tr>
 <td>1.12.2</td>
+<td>6.20.3</td>
+<td>6.20.3-1.12.2</td>
+</tr>
+<tr>
+<td>1.12.2</td>
 <td>6.13.3</td>
 <td>6.13.3-1.12.2</td>
 </tr>
