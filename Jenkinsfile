@@ -39,9 +39,10 @@ pipeline {
         buildDiscarder(logRotator(artifactNumToKeepStr: '5'))
     }
     stages {
-        stage("Prepare workspace") {
+        stage("Setup") {
             steps {
-                sh "./gradlew setupCiWorkspace"
+                //this will cause all projects to be configured, thereby forcing ForgeGradle to do all its expensive workspace setup
+                sh "./gradlew projects"
             }
         }
         stage("Build") {
@@ -50,7 +51,7 @@ pipeline {
             }
             post {
                 success {
-                    archiveArtifacts artifacts: "build/libs/*.jar", fingerprint: true
+                    archiveArtifacts artifacts: "build/libs/*-full.jar", fingerprint: true
                 }
             }
         }

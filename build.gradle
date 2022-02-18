@@ -1,5 +1,5 @@
 /*
- *   Copyright 2021 rocksdb developers
+ *   Copyright 2022 rocksdb developers
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,42 +16,30 @@
 
 buildscript {
     repositories {
-        jcenter()
+        maven {
+            name = "Gradle"
+            url = "https://plugins.gradle.org/m2/"
+        }
         maven {
             name = "Minecraft Forge"
-            url = "https://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net/"
         }
     }
     dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
-        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+        classpath "net.minecraftforge.gradle:ForgeGradle:5.1.+"
     }
 }
-apply plugin: "net.minecraftforge.gradle.forge"
+
+apply plugin: "java"
+apply plugin: "net.minecraftforge.gradle"
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "maven-publish"
 
-ext {
-    //minecraft things
-    mcpmappingsVersion = "stable_39"
-    minecraftforgeVersion = "14.23.5.2847"
-    minecraftVersion = "1.12.2"
-
-    //dependency things
-    junitVersion = "4.12"
-    rocksdbVersion = "6.20.3"
-
-    //general things
-    javaVersion = "1.8"
-    forgerocksVersion = "$rocksdbVersion-$minecraftVersion"
-}
-
-version = "$forgerocksVersion"
+version = "$rocksdbVersion-$minecraftVersion"
 group = "net.daporkchop"
 
-compileJava {
-    sourceCompatibility = targetCompatibility = "$javaVersion"
-}
+compileJava.sourceCompatibility = compileJava.targetCompatibility = "$javaVersion"
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
@@ -59,7 +47,8 @@ tasks.withType(JavaCompile) {
 
 configurations {
     shade
-    compile.extendsFrom shade
+    api.extendsFrom shade
+    implementation.extendsFrom shade
 }
 
 repositories {
@@ -67,38 +56,28 @@ repositories {
 }
 
 dependencies {
-    shade "org.rocksdb:rocksdbjni:$rocksdbVersion"
+    minecraft "net.minecraftforge:forge:${minecraftVersion}-${minecraftforgeVersion}"
 
-    testCompile "junit:junit:$junitVersion"
+    shade "org.rocksdb:rocksdbjni:${rocksdbVersion}"
 }
 
 minecraft {
-    version = "$minecraftVersion-$minecraftforgeVersion"
-    runDir = "run"
-    mappings = "$mcpmappingsVersion"
-    makeObfSourceJar = false
-
-    def args = [
-            "-Xmx2G",
-            "-XX:+UseG1GC",
-            "-ea",
-            "-da:io.netty..."
-    ]
-    clientJvmArgs += args
-    serverJvmArgs += args
+    mappings "${mappingsChannel}", "${mappingsVersion}"
 }
 
 processResources {
+    duplicatesStrategy DuplicatesStrategy.INCLUDE
+
     // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "version", "${project.version}"
+    inputs.property "mcversion", "${minecraftVersion}"
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
         // replace version and mcversion
-        expand 'version': project.version, 'mcversion': project.minecraft.version
+        expand 'version': "${project.version}", 'mcversion': "${minecraftVersion}"
     }
 
     // copy everything else except the mcmod.info
@@ -108,30 +87,21 @@ processResources {
 }
 
 shadowJar {
-    classifier = "full"
+    archiveClassifier = "full"
     configurations = [project.configurations.shade]
 
     exclude 'module-info.class'
 }
-build.dependsOn shadowJar
 
 reobf { //reobfuscate the shaded JAR
     shadowJar {}
 }
 
+shadowJar.finalizedBy reobfShadowJar
+build.dependsOn shadowJar
+
 publishing {
     repositories {
-        if (project.hasProperty("opencollabMavenUsername") && project.hasProperty("opencollabMavenPassword")) {
-            maven {
-                credentials {
-                    username = "$opencollabMavenUsername"
-                    password = "$opencollabMavenPassword"
-                }
-
-                name = "NukkitX"
-                url = version.endsWith("SNAPSHOT") ? "https://repo.opencollab.dev/snapshot/" : "https://repo.opencollab.dev/release/"
-            }
-        }
         if (project.hasProperty("daporkchopMavenUsername") && project.hasProperty("daporkchopMavenPassword")) {
             maven {
                 credentials {
@@ -152,6 +122,19 @@ publishing {
             version = project.version
 
             from components.java
+
+            artifacts = [jar]
+
+            //hacky thing to remove forge dependency from pom
+            pom.withXml {
+                asNode().getAt("dependencies").getAt("dependency").each { dep ->
+                    if ("net.minecraftforge".equals(dep.getAt("groupId").get(0).value().get(0))) {
+                        dep.parent().remove(dep)
+                    }
+                }
+            }
         }
     }
 }
+
+generateMetadataFileForMavenPublication.enabled = false
