@@ -23,12 +23,11 @@ import org.rocksdb.RocksDB;
 /**
  * @author DaPorkchop_
  */
-@Mod(modid = ForgeRocks.MODID,
+@Mod(modid = "forgerocks",
+        acceptedMinecraftVersions = "[1.12,1.13)",
         acceptableRemoteVersions = "*",
         useMetadata = true)
-public class ForgeRocks {
-    public static final String MODID = "forgerocks";
-
+public class ForgeRocks1_12 {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         event.getModLog().info("Loading rocksdb native libraries...");
@@ -37,7 +36,7 @@ public class ForgeRocks {
             RocksDB.loadLibrary(); //ensure native lib is loaded
         } catch (Throwable t) {
             event.getModLog().error("Unable to load rocksdb native libraries!", t);
-            throw new RuntimeException(t);
+            throw new RuntimeException("Unable to load rocksdb native libraries!", t);
         }
     }
 }

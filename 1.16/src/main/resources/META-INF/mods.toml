@@ -1,0 +1,19 @@
+modLoader = "javafml"
+loaderVersion = "[32,)"
+license = "Adapted from the MIT License"
+
+[[mods]]
+modId = "forgerocks"
+version = "${file.jarVersion}"
+displayName = "ForgeRocks"
+authors = "the rocksdb developers"
+displayURL = "https://daporkchop.net/"
+credits = "Barteks2x for making Cubic Chunks"
+description = "JNI bindings for rocksdb, as a Minecraft Forge mod."
+
+[[dependencies.forgerocks]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.16,1.17)"
+ordering = "NONE"
+side = "BOTH"
