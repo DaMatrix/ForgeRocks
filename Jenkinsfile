@@ -51,7 +51,7 @@ pipeline {
             }
             post {
                 success {
-                    archiveArtifacts artifacts: "build/libs/*-full.jar", fingerprint: true
+                    archiveArtifacts artifacts: "*/build/libs/*-full.jar", fingerprint: true
                 }
             }
         }

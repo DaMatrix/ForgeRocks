@@ -31,110 +31,114 @@ buildscript {
     }
 }
 
-apply plugin: "java"
-apply plugin: "net.minecraftforge.gradle"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "maven-publish"
+subprojects {
+    apply plugin: "java"
+    apply plugin: "java-library"
+    apply plugin: "net.minecraftforge.gradle"
+    apply plugin: "com.github.johnrengelman.shadow"
+    apply plugin: "maven-publish"
 
-version = "$rocksdbVersion-$minecraftVersion"
-group = "net.daporkchop"
+    version = "$rocksdbVersion-$minecraftVersion"
+    group = "net.daporkchop"
+    archivesBaseName = "ForgeRocks"
 
-compileJava.sourceCompatibility = compileJava.targetCompatibility = "$javaVersion"
+    compileJava.sourceCompatibility = compileJava.targetCompatibility = "$javaVersion"
 
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-}
-
-configurations {
-    shade
-    api.extendsFrom shade
-    implementation.extendsFrom shade
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    minecraft "net.minecraftforge:forge:${minecraftVersion}-${minecraftforgeVersion}"
-
-    shade "org.rocksdb:rocksdbjni:${rocksdbVersion}"
-}
-
-minecraft {
-    mappings "${mappingsChannel}", "${mappingsVersion}"
-}
-
-processResources {
-    duplicatesStrategy DuplicatesStrategy.INCLUDE
-
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", "${project.version}"
-    inputs.property "mcversion", "${minecraftVersion}"
-
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-
-        // replace version and mcversion
-        expand 'version': "${project.version}", 'mcversion': "${minecraftVersion}"
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
     }
 
-    // copy everything else except the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+    configurations {
+        shade
+        api.extendsFrom shade
+        implementation.extendsFrom shade
     }
-}
 
-shadowJar {
-    archiveClassifier = "full"
-    configurations = [project.configurations.shade]
-
-    exclude 'module-info.class'
-}
-
-reobf { //reobfuscate the shaded JAR
-    shadowJar {}
-}
-
-shadowJar.finalizedBy reobfShadowJar
-build.dependsOn shadowJar
-
-publishing {
     repositories {
-        if (project.hasProperty("daporkchopMavenUsername") && project.hasProperty("daporkchopMavenPassword")) {
-            maven {
-                credentials {
-                    username = "$daporkchopMavenUsername"
-                    password = "$daporkchopMavenPassword"
-                }
+        mavenCentral()
+    }
 
-                name = "DaPorkchop_"
-                url = version.endsWith("SNAPSHOT") ? "https://maven.daporkchop.net/snapshot/" : "https://maven.daporkchop.net/release/"
-            }
+    dependencies {
+        minecraft "net.minecraftforge:forge:${minecraftVersion}-${minecraftforgeVersion}"
+
+        shade "org.rocksdb:rocksdbjni:${rocksdbVersion}"
+    }
+
+    minecraft {
+        mappings "${mappingsChannel}", "${mappingsVersion}"
+    }
+
+    processResources {
+        duplicatesStrategy DuplicatesStrategy.INCLUDE
+
+        // this will ensure that this task is redone when the versions change.
+        inputs.property "version", "${project.version}"
+        inputs.property "mcversion", "${minecraftVersion}"
+
+        // replace stuff in mcmod.info, nothing else
+        from(sourceSets.main.resources.srcDirs) {
+            include 'mcmod.info'
+
+            // replace version and mcversion
+            expand 'version': "${project.version}", 'mcversion': "${minecraftVersion}"
+        }
+
+        // copy everything else except the mcmod.info
+        from(sourceSets.main.resources.srcDirs) {
+            exclude 'mcmod.info'
         }
     }
 
-    publications {
-        maven(MavenPublication) {
-            groupId = "net.daporkchop"
-            artifactId = "forgerocks"
-            version = project.version
+    shadowJar {
+        archiveClassifier = "full"
+        configurations = [project.configurations.shade]
 
-            from components.java
+        exclude 'module-info.class'
+    }
 
-            artifacts = [jar]
+    reobf { //reobfuscate the shaded JAR
+        shadowJar {}
+    }
 
-            //hacky thing to remove forge dependency from pom
-            pom.withXml {
-                asNode().getAt("dependencies").getAt("dependency").each { dep ->
-                    if ("net.minecraftforge".equals(dep.getAt("groupId").get(0).value().get(0))) {
-                        dep.parent().remove(dep)
+    shadowJar.finalizedBy reobfShadowJar
+    build.dependsOn shadowJar
+
+    publishing {
+        repositories {
+            if (project.hasProperty("daporkchopMavenUsername") && project.hasProperty("daporkchopMavenPassword")) {
+                maven {
+                    credentials {
+                        username = "$daporkchopMavenUsername"
+                        password = "$daporkchopMavenPassword"
+                    }
+
+                    name = "DaPorkchop_"
+                    url = version.endsWith("SNAPSHOT") ? "https://maven.daporkchop.net/snapshot/" : "https://maven.daporkchop.net/release/"
+                }
+            }
+        }
+
+        publications {
+            maven(MavenPublication) {
+                groupId = "net.daporkchop"
+                artifactId = "forgerocks"
+                version = project.version
+
+                from components.java
+
+                artifacts = [jar]
+
+                //hacky thing to remove forge dependency from pom
+                pom.withXml {
+                    asNode().getAt("dependencies").getAt("dependency").each { dep ->
+                        if ("net.minecraftforge".equals(dep.getAt("groupId").get(0).value().get(0))) {
+                            dep.parent().remove(dep)
+                        }
                     }
                 }
             }
         }
     }
-}
 
-generateMetadataFileForMavenPublication.enabled = false
+    generateMetadataFileForMavenPublication.enabled = false
+}
