@@ -72,7 +72,7 @@ subprojects {
         duplicatesStrategy DuplicatesStrategy.INCLUDE
 
         // this will ensure that this task is redone when the versions change.
-        inputs.property "version", "${rocksdbVersion}"
+        inputs.property "version", "${rocksdbVersion}-${minecraftVersion}"
         inputs.property "mcversion", "${minecraftVersion}"
 
         // replace stuff in mcmod.info, nothing else
@@ -80,7 +80,7 @@ subprojects {
             include 'mcmod.info'
 
             // replace version and mcversion
-            expand 'version': "${rocksdbVersion}", 'mcversion': "${minecraftVersion}"
+            expand 'version': "${rocksdbVersion}-${minecraftVersion}", 'mcversion': "${minecraftVersion}"
         }
 
         // copy everything else except the mcmod.info
