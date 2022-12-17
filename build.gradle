@@ -78,6 +78,7 @@ subprojects {
         // replace stuff in mcmod.info, nothing else
         from(sourceSets.main.resources.srcDirs) {
             include 'mcmod.info'
+            include 'META-INF/mods.toml'
 
             // replace version and mcversion
             expand 'version': "${rocksdbVersion}-${minecraftVersion}", 'mcversion': "${minecraftVersion}"
@@ -86,6 +87,7 @@ subprojects {
         // copy everything else except the mcmod.info
         from(sourceSets.main.resources.srcDirs) {
             exclude 'mcmod.info'
+            exclude 'META-INF/mods.toml'
         }
     }
 
